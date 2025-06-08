@@ -229,7 +229,11 @@ export const ProjectsTab = () => {
                   <TableRow key={project.id}>
                     <TableCell className="font-medium">{project.client_name}</TableCell>
                     <TableCell>{project.contact || '-'}</TableCell>
-                    <TableCell>{project.requirements || '-'}</TableCell>
+                    <TableCell>
+                      <div className="max-w-[200px] truncate" title={project.requirements || ''}>
+                        {project.requirements || '-'}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {project.first_payment_date ? new Date(project.first_payment_date).toLocaleDateString() : '-'}
                     </TableCell>

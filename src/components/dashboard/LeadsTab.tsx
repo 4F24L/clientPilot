@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, Download, ArrowRight, Info, X } from 'lucide-react';
 import { LeadForm } from './forms/LeadForm';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
-import debounce from 'lodash/debounce';
 
 interface Lead {
   id: string;
@@ -24,10 +23,9 @@ export const LeadsTab = () => {
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const { user } = useAuthStore();
   const [showStatusInfo, setShowStatusInfo] = useState(false);
-  const fetchLeadsRef = useRef<() => Promise<void>>();
 
   useEffect(() => {
-    fetchLeadsRef.current = debounce(async () => {
+    const fetchLeads = async () => {
       if (!user) {
         console.log('No user found, skipping fetch');
         return;
@@ -55,14 +53,9 @@ export const LeadsTab = () => {
       } finally {
         setLoading(false);
       }
-    }, 300);
-  }, [user]);
+    };
 
-  useEffect(() => {
-    console.log('Current user:', user);
-    if (fetchLeadsRef.current) {
-      fetchLeadsRef.current();
-    }
+    fetchLeads();
   }, [user]);
 
   const handleDelete = async (id: string) => {
@@ -90,9 +83,6 @@ export const LeadsTab = () => {
   const handleFormSuccess = () => {
     setShowForm(false);
     setEditingLead(null);
-    if (fetchLeadsRef.current) {
-      fetchLeadsRef.current();
-    }
   };
 
   const handleConvertToProject = async (lead: Lead) => {
@@ -212,162 +202,119 @@ export const LeadsTab = () => {
       </div>
 
       <div className="bg-background rounded-lg border">
-        <div className="relative">
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
-                  <th className="w-[15%] px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Phone</th>
-                  <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Website</th>
-                  <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Address</th>
-                  <th className="w-[15%] px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <div className="flex items-center space-x-1">
-                      <span>Call Status</span>
+        <div className="w-full overflow-hidden">
+          <table className="w-full table-auto">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Phone</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Website</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Address</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <div className="flex items-center space-x-1">
+                    <span>Call Status</span>
+                    <button
+                      onClick={() => setShowStatusInfo(true)}
+                      className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                    >
+                      <Info className="h-4 w-4" />
+                    </button>
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-background divide-y divide-border">
+              {leads.map((lead) => (
+                <tr key={lead.id} className="hover:bg-muted/50">
+                  <td className="px-4 py-4 text-sm font-medium text-foreground">{lead.name}</td>
+                  <td className="px-4 py-4 text-sm text-muted-foreground">{lead.phone || '-'}</td>
+                  <td className="px-4 py-4 text-sm text-muted-foreground">
+                    {lead.website ? (
+                      <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                        {lead.website}
+                      </a>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-muted-foreground">
+                    <div className="max-w-[200px] truncate" title={lead.address || ''}>
+                      {lead.address || '-'}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-muted-foreground">
+                    <select
+                      value={lead.call_status || ''}
+                      onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                      className="bg-transparent border-none focus:ring-0 text-sm"
+                    >
+                      <option value="">Select Status</option>
+                      <option value="not_contacted">Not Contacted</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="converted">Converted</option>
+                      <option value="lost">Lost</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => setShowStatusInfo(true)}
-                        className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                        onClick={() => handleEdit(lead)}
+                        className="text-blue-600 hover:text-blue-800"
                       >
-                        <Info className="h-4 w-4" />
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(lead.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleConvertToProject(lead)}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
-                  </th>
-                  <th className="w-[10%] px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-background divide-y divide-border">
-            {leads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-muted/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{lead.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{lead.phone || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {lead.website ? (
-                        <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
-                          {lead.website}
-                        </a>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{lead.address || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={lead.call_status || ''}
-                        onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                        className="px-2 py-1 text-sm rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      >
-                        <option value="">Select Status</option>
-                        <option value="not_called">Not Called</option>
-                        <option value="called">Called</option>
-                        <option value="callback">Callback</option>
-                        <option value="not_interested">Not Interested</option>
-                        <option value="interested">Interested</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(lead)}
-                          className="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-colors"
-                          title="Edit Lead"
-                        >
-                      <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (window.confirm('Are you sure you want to delete this lead? This action cannot be undone.')) {
-                              await handleDelete(lead.id);
-                            }
-                          }}
-                          className="inline-flex items-center px-3 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white border border-red-700 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 transition-colors"
-                          title="Delete Lead"
-                        >
-                      <Trash2 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleConvertToProject(lead)}
-                          className="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white border border-green-700 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition-colors"
-                          title="Convert to Project"
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                  </div>
-                    </td>
-                  </tr>
-            ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
       {showForm && (
         <LeadForm
-          lead={editingLead}
-          onSuccess={handleFormSuccess}
           onCancel={() => {
             setShowForm(false);
             setEditingLead(null);
           }}
+          onSuccess={handleFormSuccess}
+          lead={editingLead}
         />
       )}
 
-      {/* Status Info Modal */}
       {showStatusInfo && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg shadow-xl w-full max-w-3xl h-[75vh] flex flex-col">
-            <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground">Call Status Information</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Call Status Information</h3>
               <button
                 onClick={() => setShowStatusInfo(false)}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-gray-500 hover:text-gray-700"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-medium text-blue-500 mb-2">Not Called</h4>
-                  <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                    <li>Initial contact has not been made with the lead</li>
-                    <li>Lead is in the initial stage of the pipeline</li>
-                    <li>Requires first contact to be established</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium text-blue-500 mb-2">Called</h4>
-                  <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                    <li>Initial contact has been made with the lead</li>
-                    <li>Basic information has been exchanged</li>
-                    <li>Initial interest level has been assessed</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium text-blue-500 mb-2">Callback</h4>
-                  <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                    <li>Lead has requested a follow-up call at a later time</li>
-                    <li>Specific callback time has been scheduled</li>
-                    <li>Requires follow-up action at the scheduled time</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium text-blue-500 mb-2">Not Interested</h4>
-                  <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                    <li>Lead has declined further contact or services</li>
-                    <li>No immediate opportunity for conversion</li>
-                    <li>May be recontacted after a cooling period</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium text-blue-500 mb-2">Interested</h4>
-                  <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                    <li>Lead has shown interest and is ready for project discussion</li>
-                    <li>Ready to move forward with detailed requirements</li>
-                    <li>Potential for conversion to project</li>
-                  </ul>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <p><span className="font-medium">Not Contacted:</span> Initial lead, no contact made yet</p>
+              <p><span className="font-medium">Contacted:</span> Initial contact has been made</p>
+              <p><span className="font-medium">In Progress:</span> Ongoing discussions or negotiations</p>
+              <p><span className="font-medium">Converted:</span> Lead has been converted to a project</p>
+              <p><span className="font-medium">Lost:</span> Lead is no longer interested or unresponsive</p>
             </div>
           </div>
         </div>

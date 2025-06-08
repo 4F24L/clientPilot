@@ -179,7 +179,11 @@ export const SupportTab = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {client.renewal_date ? new Date(client.renewal_date).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{client.feedback || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                      <div className="max-w-[200px] truncate" title={client.feedback || ''}>
+                        {client.feedback || '-'}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   <div className="flex space-x-2">
                         <button
