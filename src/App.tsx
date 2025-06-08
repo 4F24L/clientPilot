@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from 'react-hot-toast';
 import Landing from "./pages/Landing";
@@ -15,7 +15,9 @@ const queryClient = new QueryClient();
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuthStore();
+  const location = useLocation();
   
+  // If we're still loading, show a loading spinner
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -24,8 +26,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  if (!user) {
-    return <Navigate to="/" replace />;
+  // If there's no user and we're not on the landing page, redirect to landing
+  if (!user && location.pathname !== '/') {
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+  // If we have a user and we're on the landing page, redirect to dashboard
+  if (user && location.pathname === '/') {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

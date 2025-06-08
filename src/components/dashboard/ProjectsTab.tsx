@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, Download, ArrowRight, Info, X } from 'lucide-react';
@@ -202,15 +201,15 @@ export const ProjectsTab = () => {
       <div className="bg-background rounded-lg border">
         <div className="relative">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Client Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requirements</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">First Payment</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Final Payment</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Client Name</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Requirements</TableHead>
+                  <TableHead>First Payment</TableHead>
+                  <TableHead>Final Payment</TableHead>
+                  <TableHead>
                     <div className="flex items-center space-x-1">
                       <span>Status</span>
                       <button
@@ -220,24 +219,24 @@ export const ProjectsTab = () => {
                         <Info className="h-4 w-4" />
                       </button>
                     </div>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Delivery Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-background divide-y divide-border">
-            {projects.map((project) => (
-                  <tr key={project.id} className="hover:bg-muted/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{project.client_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{project.contact || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{project.requirements || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                  </TableHead>
+                  <TableHead>Delivery Date</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell className="font-medium">{project.client_name}</TableCell>
+                    <TableCell>{project.contact || '-'}</TableCell>
+                    <TableCell>{project.requirements || '-'}</TableCell>
+                    <TableCell>
                       {project.first_payment_date ? new Date(project.first_payment_date).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    </TableCell>
+                    <TableCell>
                       {project.final_payment_date ? new Date(project.final_payment_date).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell>
                       <select
                         value={project.status || ''}
                         onChange={(e) => handleStatusChange(project.id, e.target.value)}
@@ -248,41 +247,38 @@ export const ProjectsTab = () => {
                         <option value="in_progress">In Progress</option>
                         <option value="completed">Completed</option>
                       </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    </TableCell>
+                    <TableCell>
                       {project.delivery_date ? new Date(project.delivery_date).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                  <div className="flex space-x-2">
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
                         <button
                           onClick={() => handleEdit(project)}
-                          className="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-colors"
-                          title="Edit Project"
+                          className="text-blue-600 hover:text-blue-800"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(project.id)}
-                          className="inline-flex items-center px-3 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white border border-red-700 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 transition-colors"
-                          title="Delete Project"
+                          className="text-red-600 hover:text-red-800"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                         {project.status !== 'completed' && (
                           <button
                         onClick={() => handleMoveToSupport(project)}
-                            className="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white border border-green-700 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition-colors"
-                            title="Move to Support"
+                            className="text-green-600 hover:text-green-800"
                       >
                         <ArrowRight className="h-4 w-4" />
                           </button>
                     )}
                   </div>
-                    </td>
-                  </tr>
-            ))}
-              </tbody>
-            </table>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, Download, ArrowRight, Info, X } from 'lucide-react';
 import { LeadForm } from './forms/LeadForm';
@@ -24,14 +24,10 @@ export const LeadsTab = () => {
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const { user } = useAuthStore();
   const [showStatusInfo, setShowStatusInfo] = useState(false);
+  const fetchLeadsRef = useRef<() => Promise<void>>();
 
   useEffect(() => {
-    console.log('Current user:', user);
-    fetchLeads();
-  }, [user, fetchLeads]);
-
-  const fetchLeads = useCallback(
-    debounce(async () => {
+    fetchLeadsRef.current = debounce(async () => {
       if (!user) {
         console.log('No user found, skipping fetch');
         return;
@@ -59,9 +55,15 @@ export const LeadsTab = () => {
       } finally {
         setLoading(false);
       }
-    }, 300),
-    [user]
-  );
+    }, 300);
+  }, [user]);
+
+  useEffect(() => {
+    console.log('Current user:', user);
+    if (fetchLeadsRef.current) {
+      fetchLeadsRef.current();
+    }
+  }, [user]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -72,7 +74,7 @@ export const LeadsTab = () => {
 
       if (error) throw error;
 
-    setLeads(leads.filter(lead => lead.id !== id));
+      setLeads(leads.filter(lead => lead.id !== id));
       toast.success("Lead deleted successfully");
     } catch (error) {
       console.error('Error deleting lead:', error);
@@ -88,7 +90,9 @@ export const LeadsTab = () => {
   const handleFormSuccess = () => {
     setShowForm(false);
     setEditingLead(null);
-    fetchLeads();
+    if (fetchLeadsRef.current) {
+      fetchLeadsRef.current();
+    }
   };
 
   const handleConvertToProject = async (lead: Lead) => {

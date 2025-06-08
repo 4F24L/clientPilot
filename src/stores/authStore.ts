@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { User } from '@supabase/supabase-js';
 
@@ -12,6 +11,12 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: true,
-  setUser: (user) => set({ user }),
-  setLoading: (loading) => set({ loading }),
+  setUser: (user) => {
+    console.log('AuthStore: Setting user:', user);
+    set({ user });
+  },
+  setLoading: (loading) => {
+    console.log('AuthStore: Setting loading:', loading);
+    set({ loading });
+  },
 }));

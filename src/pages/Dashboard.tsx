@@ -1,5 +1,3 @@
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/stores/authStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { Sun, Moon } from 'lucide-react';
 import { LeadsTab } from '@/components/dashboard/LeadsTab';
@@ -12,10 +10,8 @@ import { useEffect } from 'react';
 type TabId = 'leads' | 'projects' | 'support';
 
 const Dashboard = () => {
-  const { user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { activeTab, setActiveTab } = useDashboardStore();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (theme === 'dark') {

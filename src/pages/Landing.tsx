@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Building2, Users, Target, Shield } from 'lucide-react';
 import { signInWithGoogle } from '@/lib/auth';
 import { useAuthStore } from '@/stores/authStore';
@@ -6,18 +6,19 @@ import { useEffect } from 'react';
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const location = useLocation();
+  const { user, loading } = useAuthStore();
 
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
+    if (user && !loading) {
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate, location]);
 
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      navigate('/dashboard');
     } catch (error) {
       console.error('Error signing in with Google:', error);
     }
