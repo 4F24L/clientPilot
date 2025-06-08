@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import { useAuthStore } from '@/stores/authStore';
 import { AuthInitializer } from '@/components/AuthInitializer';
-import { AdminDashboard } from '@/pages/AdminDashboard';
+import  AdminDashboard  from '@/pages/AdminDashboard';
 import { AdminRoute } from '@/components/AdminRoute';
 
 const queryClient = new QueryClient();
