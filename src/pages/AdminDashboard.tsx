@@ -51,7 +51,7 @@ export const AdminDashboard = () => {
     };
 
     checkAdmin();
-  }, [user]);
+  }, [user, navigate]);
 
   const fetchUserStats = async () => {
     try {

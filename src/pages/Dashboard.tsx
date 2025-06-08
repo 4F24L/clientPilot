@@ -9,6 +9,8 @@ import { useDashboardStore } from '@/stores/dashboardStore';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { useEffect } from 'react';
 
+type TabId = 'leads' | 'projects' | 'support';
+
 const Dashboard = () => {
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
@@ -24,9 +26,9 @@ const Dashboard = () => {
   }, [theme]);
 
   const tabs = [
-    { id: 'leads', label: 'Leads' },
-    { id: 'projects', label: 'Projects' },
-    { id: 'support', label: 'Support' },
+    { id: 'leads' as TabId, label: 'Leads' },
+    { id: 'projects' as TabId, label: 'Projects' },
+    { id: 'support' as TabId, label: 'Support' },
   ];
 
   return (
@@ -62,7 +64,7 @@ const Dashboard = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'

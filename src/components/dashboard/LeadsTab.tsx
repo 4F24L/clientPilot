@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, Download, ArrowRight, Info, X } from 'lucide-react';
 import { LeadForm } from './forms/LeadForm';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
+import debounce from 'lodash/debounce';
 
 interface Lead {
   id: string;
@@ -27,37 +28,40 @@ export const LeadsTab = () => {
   useEffect(() => {
     console.log('Current user:', user);
     fetchLeads();
-  }, [user]);
+  }, [user, fetchLeads]);
 
-  const fetchLeads = async () => {
-    if (!user) {
-      console.log('No user found, skipping fetch');
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      console.log('Fetching leads for user:', user.id);
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+  const fetchLeads = useCallback(
+    debounce(async () => {
+      if (!user) {
+        console.log('No user found, skipping fetch');
+        return;
       }
       
-      console.log('Fetched leads:', data);
-      setLeads(data || []);
-    } catch (error) {
-      console.error('Error fetching leads:', error);
-      toast.error("Failed to fetch leads");
-    } finally {
-      setLoading(false);
-    }
-  };
+      setLoading(true);
+      try {
+        console.log('Fetching leads for user:', user.id);
+        const { data, error } = await supabase
+          .from('leads')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+        
+        console.log('Fetched leads:', data);
+        setLeads(data || []);
+      } catch (error) {
+        console.error('Error fetching leads:', error);
+        toast.error("Failed to fetch leads");
+      } finally {
+        setLoading(false);
+      }
+    }, 300),
+    [user]
+  );
 
   const handleDelete = async (id: string) => {
     try {

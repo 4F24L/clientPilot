@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,11 +27,7 @@ export const SupportTab = () => {
   const { user } = useAuthStore();
   const [showPlanInfo, setShowPlanInfo] = useState(false);
 
-  useEffect(() => {
-    fetchSupportClients();
-  }, [user]);
-
-  const fetchSupportClients = async () => {
+  const fetchSupportClients = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
@@ -50,7 +46,11 @@ export const SupportTab = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchSupportClients();
+  }, [fetchSupportClients]);
 
   const handleDelete = async (id: string) => {
     try {
